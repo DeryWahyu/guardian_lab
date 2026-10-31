@@ -6,7 +6,11 @@ export const PUBLIC_ROUTES = {
 
   // Parameter Builders
   homeWithTab: (tab: "url" | "qr" | "apk") => `/?tab=${tab}`,
+  homeWithMode: (mode: "human" | "geek", tab?: "url" | "qr" | "apk") =>
+    `/?mode=${mode}${tab ? `&tab=${tab}` : ""}`,
   sandboxWebWithTarget: (target: string) => `/sandbox/web?target=${encodeURIComponent(target)}`,
+  actWithTarget: (target: string, scanId?: string) =>
+    `/act?target=${encodeURIComponent(target)}${scanId ? `&id=${encodeURIComponent(scanId)}` : ""}`,
 } as const;
 
 export const AUTH_ROUTES = {
@@ -36,6 +40,10 @@ export const API_ROUTES = {
   analyzeApk: "/api/analyze-apk",
   sandboxSessionStart: "/api/sandbox/session/start",
   sandboxSessionStop: "/api/sandbox/session/stop",
+  authRegister: "/api/auth/register",
+  authLogin: "/api/auth/login",
+  authLogout: "/api/auth/logout",
+  authMe: "/api/auth/me",
 } as const;
 
 export const ROUTES = {

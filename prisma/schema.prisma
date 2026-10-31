@@ -1,0 +1,281 @@
+// Prisma Schema for Guardian Lab
+// Database: MySQL 9.2.0 (localhost:3306/guardian_lab)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// -------------------------------------------------------------
+// ENUMS
+// -------------------------------------------------------------
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum ScanType {
+  URL
+  QR
+  APK
+}
+
+enum RiskLevel {
+  SAFE
+  WARNING
+  DANGEROUS
+  PHISHING
+  MALWARE
+  CRITICAL
+  HIGH
+  MEDIUM
+  LOW
+}
+
+enum SandboxType {
+  WEB
+  ANDROID
+}
+
+enum SandboxStatus {
+  ACTIVE
+  EXPIRED
+  DESTROYED
+  FAILED
+}
+
+enum QuizCategory {
+  SPOT_THE_PHISH
+  SOCIAL_ENGINEERING
+  DANGEROUS_PERMISSIONS
+}
+
+enum Difficulty {
+  EASY
+  MEDIUM
+  HARD
+}
+
+enum QuestionType {
+  MULTIPLE_CHOICE
+  TRUE_FALSE
+  IMAGE_CHOICE
+}
+
+enum ReplayStatus {
+  PENDING_REVIEW
+  APPROVED
+  REJECTED
+}
+
+// -------------------------------------------------------------
+// MODELS
+// -------------------------------------------------------------
+
+model User {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  passwordHash String
+  name         String
+  role         Role      @default(USER)
+  exp          Int       @default(0)
+  streakDays   Int       @default(1)
+  lastActiveAt DateTime  @default(now())
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  // Relations
+  sessions         Session[]
+  forensicRecords  ForensicRecord[]
+  sandboxSessions  SandboxSession[]
+  userBadges       UserBadge[]
+  quizAttempts     QuizAttempt[]
+  communityReplays CommunityReplay[]
+  replayAttempts   ReplayAttempt[]
+
+  @@index([email])
+  @@index([role])
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique @db.VarChar(500)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model ForensicRecord {
+  id                String    @id @default(cuid())
+  userId            String
+  target            String    @db.Text
+  type              ScanType
+  riskLevel         RiskLevel
+  riskScore         Int
+  scamCategory      String
+  summary           String    @db.Text
+  deceptionTricks   Json
+  technicalEvidence Json
+  defangedTarget    String    @db.Text
+  createdAt         DateTime  @default(now())
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([type])
+  @@index([riskLevel])
+  @@index([createdAt])
+}
+
+model SandboxSession {
+  id          String        @id @default(cuid())
+  userId      String
+  targetUrl   String        @db.Text
+  type        SandboxType
+  status      SandboxStatus @default(ACTIVE)
+  startedAt   DateTime      @default(now())
+  expiresAt   DateTime
+  destroyedAt DateTime?
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([status])
+  @@index([startedAt])
+}
+
+model Badge {
+  id          String      @id @default(cuid())
+  code        String      @unique
+  title       String
+  description String      @db.Text
+  iconUrl     String?
+  expReward   Int         @default(50)
+  createdAt   DateTime    @default(now())
+
+  // Relations
+  userBadges UserBadge[]
+
+  @@index([code])
+}
+
+model UserBadge {
+  id        String   @id @default(cuid())
+  userId    String
+  badgeId   String
+  awardedAt DateTime @default(now())
+
+  // Relations
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  badge Badge @relation(fields: [badgeId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, badgeId])
+  @@index([userId])
+  @@index([badgeId])
+}
+
+model Quiz {
+  id          String       @id @default(cuid())
+  title       String
+  description String       @db.Text
+  category    QuizCategory
+  difficulty  Difficulty   @default(EASY)
+  expReward   Int          @default(50)
+  published   Boolean      @default(true)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  // Relations
+  questions QuizQuestion[]
+  attempts  QuizAttempt[]
+
+  @@index([category])
+  @@index([difficulty])
+  @@index([published])
+}
+
+model QuizQuestion {
+  id             String       @id @default(cuid())
+  quizId         String
+  questionText   String       @db.Text
+  questionType   QuestionType @default(MULTIPLE_CHOICE)
+  options        Json
+  correctAnswers Json
+  explanation    String       @db.Text
+  order          Int          @default(0)
+
+  // Relations
+  quiz Quiz @relation(fields: [quizId], references: [id], onDelete: Cascade)
+
+  @@index([quizId])
+  @@index([order])
+}
+
+model QuizAttempt {
+  id          String   @id @default(cuid())
+  userId      String
+  quizId      String
+  score       Int
+  expEarned   Int      @default(0)
+  passed      Boolean  @default(false)
+  completedAt DateTime @default(now())
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  quiz Quiz @relation(fields: [quizId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([quizId])
+  @@index([completedAt])
+}
+
+model CommunityReplay {
+  id            String       @id @default(cuid())
+  userId        String
+  title         String
+  description   String       @db.Text
+  scamType      String
+  sanitizedData Json
+  status        ReplayStatus @default(PENDING_REVIEW)
+  adminNotes    String?      @db.Text
+  reviewedAt    DateTime?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  // Relations
+  user     User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  attempts ReplayAttempt[]
+
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model ReplayAttempt {
+  id          String   @id @default(cuid())
+  userId      String
+  replayId    String
+  solved      Boolean  @default(false)
+  expEarned   Int      @default(0)
+  attemptedAt DateTime @default(now())
+
+  // Relations
+  user   User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  replay CommunityReplay @relation(fields: [replayId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([replayId])
+  @@index([attemptedAt])
+}

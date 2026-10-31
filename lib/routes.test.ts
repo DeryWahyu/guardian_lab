@@ -18,8 +18,13 @@ describe("routes constants", () => {
 
   it("builds parameterized routes properly", () => {
     expect(PUBLIC_ROUTES.homeWithTab("qr")).toBe("/?tab=qr");
+    expect(PUBLIC_ROUTES.homeWithMode("geek")).toBe("/?mode=geek");
+    expect(PUBLIC_ROUTES.homeWithMode("geek", "apk")).toBe("/?mode=geek&tab=apk");
     expect(PUBLIC_ROUTES.sandboxWebWithTarget("https://evil.com/phish?id=123")).toBe(
       "/sandbox/web?target=https%3A%2F%2Fevil.com%2Fphish%3Fid%3D123",
+    );
+    expect(PUBLIC_ROUTES.actWithTarget("https://evil.com", "scan-123")).toBe(
+      "/act?target=https%3A%2F%2Fevil.com&id=scan-123",
     );
   });
 
