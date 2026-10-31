@@ -1,14 +1,14 @@
 # Panduan Rute & Navigasi Terpusat — Guardian Lab
 
 > **Dokumen:** `ai-agent-docs/routes-and-navigation.md`  
-> **Fokus Utama:** Sentralisasi Rute `lib/routes.ts` (Zero Hardcoded Routes), Parameter Builders, dan Penggunaan Tautan  
-> **Audience:** AI Coding Agent & Pengembang Frontend/Backend
+> **Fokus Utama:** Sentralisasi Rute `lib/routes.ts` (Zero Hardcoded Routes), Rute Auth, Protected, Admin, API, dan Parameter Builders  
+> **Audience:** AI Coding Agent & Pengembang Fullstack Next.js
 
 ---
 
 ## 1. Filosofi Sentralisasi Rute (Zero Hardcoded Routes)
 
-Menuliskan path URL sebagai string manual (_hardcoded string literal_) seperti `"/sandbox/web"` atau `"/api/analyze-url"` di berbagai komponen dilarang keras karena:
+Menuliskan path URL sebagai string manual (_hardcoded string literal_) seperti `"/sandbox/web"` atau `"/admin/quizzes"` di berbagai komponen dilarang keras karena:
 
 1. **Rentan Typo:** Kesalahan penulisan rute tidak terdeteksi saat _compile time_.
 2. **Refactoring Rapuh:** Perubahan rute atau parameter URL akan merusak navigasi di banyak file tanpa peringatan compiler.
@@ -31,6 +31,27 @@ export const PUBLIC_ROUTES = {
   sandboxWebWithTarget: (target: string) => `/sandbox/web?target=${encodeURIComponent(target)}`,
 } as const;
 
+export const AUTH_ROUTES = {
+  login: "/login",
+  register: "/register",
+} as const;
+
+export const PROTECTED_ROUTES = {
+  history: "/history",
+  historyDetail: (id: string) => `/history/${encodeURIComponent(id)}`,
+  academy: "/academy",
+  academyLesson: (id: string) => `/academy/${encodeURIComponent(id)}`,
+  community: "/community",
+  communityReplay: (id: string) => `/community/${encodeURIComponent(id)}`,
+} as const;
+
+export const ADMIN_ROUTES = {
+  dashboard: "/admin",
+  quizzes: "/admin/quizzes",
+  communityReviews: "/admin/community-reviews",
+  users: "/admin/users",
+} as const;
+
 export const API_ROUTES = {
   analyzeUrl: "/api/analyze-url",
   analyzeQr: "/api/analyze-qr",
@@ -41,6 +62,9 @@ export const API_ROUTES = {
 
 export const ROUTES = {
   public: PUBLIC_ROUTES,
+  auth: AUTH_ROUTES,
+  protected: PROTECTED_ROUTES,
+  admin: ADMIN_ROUTES,
   api: API_ROUTES,
 } as const;
 
@@ -55,54 +79,35 @@ export default ROUTES;
 
 ```tsx
 import Link from "next/link";
-import { PUBLIC_ROUTES } from "@/lib/routes";
+import { PUBLIC_ROUTES, PROTECTED_ROUTES, ADMIN_ROUTES } from "@/lib/routes";
 
 // ❌ DILARANG: String hardcoded
 <Link href="/sandbox/web">Buka Sandbox</Link>
 
 // ✅ BENAR: Mengimpor konstanta
 <Link href={PUBLIC_ROUTES.sandboxWeb}>Buka Sandbox</Link>
-<Link href={PUBLIC_ROUTES.sandboxWebWithTarget("https://phishing.xyz")}>
-  Buka Link di Sandbox
-</Link>
+<Link href={PROTECTED_ROUTES.academy}>Masuk Guardian Academy</Link>
+<Link href={ADMIN_ROUTES.quizzes}>Kelola Bank Soal</Link>
 ```
 
 ### B. Pengalihan Rute (`redirect()`)
 
-```typescript
+```tsx
 import { redirect } from "next/navigation";
-import { PUBLIC_ROUTES } from "@/lib/routes";
+import { AUTH_ROUTES, PROTECTED_ROUTES } from "@/lib/routes";
 
-// ❌ DILARANG
-redirect("/");
-
-// ✅ BENAR
-redirect(PUBLIC_ROUTES.home);
+if (!session) {
+  redirect(AUTH_ROUTES.login);
+}
 ```
 
-### C. Pemanggilan API Frontend (`fetch()`)
+### C. Pemanggilan Endpoint Internal API (`fetch()`)
 
-```typescript
+```tsx
 import { API_ROUTES } from "@/lib/routes";
 
-// ❌ DILARANG
-const res = await fetch("/api/analyze-url", { ... });
-
-// ✅ BENAR
-const res = await fetch(API_ROUTES.analyzeUrl, {
+const response = await fetch(API_ROUTES.analyzeUrl, {
   method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({ url }),
+  body: JSON.stringify({ url: targetUrl }),
 });
 ```
-
----
-
-## 4. Aturan Penambahan Rute Baru
-
-Jika Anda membuat halaman atau endpoint API baru:
-
-1. Buka file `lib/routes.ts`.
-2. Daftarkan rute ke grup `PUBLIC_ROUTES` atau `API_ROUTES`.
-3. Gunakan fungsi builder jika rute memerlukan parameter dinamis.
-4. Jalankan `bunx tsc --noEmit` untuk memastikan integritas tipe rute.

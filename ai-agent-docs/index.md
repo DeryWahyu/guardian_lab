@@ -28,11 +28,11 @@ Dokumentasi dikelompokkan ke dalam tiga kategori utama:
 
 ### 2. Spesifikasi Sistem & Modul Fitur (System & Modules)
 
-| Dokumen                                                    | Topik & Cakupan Utama                                                                                           | Kapan Harus Dirujuk?                                                                       |
-| :--------------------------------------------------------- | :-------------------------------------------------------------------------------------------------------------- | :----------------------------------------------------------------------------------------- |
-| **[system-architecture.md](./system-architecture.md)**     | Alur pengguna _end-to-end_ (Tahap 1–5), arsitektur fullstack, dan pengaman teknis (_Anti-Loophole Safeguards_). | Saat merancang alur sistem terpadu (Next.js Fullstack $\leftrightarrow$ Docker Sandboxes). |
-| **[modules-specification.md](./modules-specification.md)** | Rincian implementasi fitur: Landing Dashboard, AI URL & QR Helper, Web Sandbox, APK X-Ray, & Guardian Card.     | Saat menulis kode logika dan antarmuka untuk modul fitur tertentu.                         |
-| **[api-and-prompts.md](./api-and-prompts.md)**             | Kontrak JSON DeepSeek API, system prompt, aturan redundansi prompt, regex _PII Scrubber_, dan endpoint API.     | Saat mengintegrasikan LLM DeepSeek dan membangun endpoint API Route Handlers.              |
+| Dokumen                                                    | Topik & Cakupan Utama                                                                                                                                            | Kapan Harus Dirujuk?                                                                       |
+| :--------------------------------------------------------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------- | :----------------------------------------------------------------------------------------- |
+| **[system-architecture.md](./system-architecture.md)**     | Alur pengguna _end-to-end_ (Tahap 1–5), arsitektur fullstack, dan pengaman teknis (_Anti-Loophole Safeguards_).                                                  | Saat merancang alur sistem terpadu (Next.js Fullstack $\leftrightarrow$ Docker Sandboxes). |
+| **[modules-specification.md](./modules-specification.md)** | Rincian implementasi 9 modul fitur: Landing, AI URL/QR, Web Sandbox, APK X-Ray, Share Card, RBAC Auth, Forensic History, Gamifikasi Academy, & Community Replay. | Saat menulis kode logika dan antarmuka untuk modul fitur tertentu.                         |
+| **[api-and-prompts.md](./api-and-prompts.md)**             | Kontrak JSON DeepSeek API, system prompt, aturan redundansi prompt, regex _PII Scrubber_, dan endpoint API.                                                      | Saat mengintegrasikan LLM DeepSeek dan membangun endpoint API Route Handlers.              |
 
 ### 3. Konteks Domain & Kasus Nyata (Domain Knowledge)
 

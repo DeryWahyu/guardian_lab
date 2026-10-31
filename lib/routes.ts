@@ -9,6 +9,27 @@ export const PUBLIC_ROUTES = {
   sandboxWebWithTarget: (target: string) => `/sandbox/web?target=${encodeURIComponent(target)}`,
 } as const;
 
+export const AUTH_ROUTES = {
+  login: "/login",
+  register: "/register",
+} as const;
+
+export const PROTECTED_ROUTES = {
+  history: "/history",
+  historyDetail: (id: string) => `/history/${encodeURIComponent(id)}`,
+  academy: "/academy",
+  academyLesson: (id: string) => `/academy/${encodeURIComponent(id)}`,
+  community: "/community",
+  communityReplay: (id: string) => `/community/${encodeURIComponent(id)}`,
+} as const;
+
+export const ADMIN_ROUTES = {
+  dashboard: "/admin",
+  quizzes: "/admin/quizzes",
+  communityReviews: "/admin/community-reviews",
+  users: "/admin/users",
+} as const;
+
 export const API_ROUTES = {
   analyzeUrl: "/api/analyze-url",
   analyzeQr: "/api/analyze-qr",
@@ -19,6 +40,9 @@ export const API_ROUTES = {
 
 export const ROUTES = {
   public: PUBLIC_ROUTES,
+  auth: AUTH_ROUTES,
+  protected: PROTECTED_ROUTES,
+  admin: ADMIN_ROUTES,
   api: API_ROUTES,
 } as const;
 
