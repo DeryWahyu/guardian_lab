@@ -1,0 +1,11 @@
+.git
+.github
+.husky
+.next
+node_modules
+npm-debug.log
+yarn-error.log
+.env*.local
+.env
+ai-agent-docs
+README.md
