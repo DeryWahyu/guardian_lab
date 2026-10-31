@@ -102,22 +102,61 @@ File yang terlalu panjang sulit dibaca, memicu konflik merge, dan meningkatkan r
 
 ---
 
-## 5. Standarisasi Pola Co-location Direktori Fitur
+## 5. Standarisasi Struktur Folder & Pola Co-location Komponen
 
-Letakkan aset dan dependensi sedekat mungkin dengan fitur yang menggunakannya:
+Guardian Lab menerapkan arsitektur direktori hibrida yang memisahkan dependensi global dengan dependensi lokal fitur (_feature co-location_) secara tegas.
+
+### A. Matriks Keputusan: Kapan Menempatkan Komponen?
+
+Gunakan panduan keputusan berikut untuk menentukan lokasi file komponen baru:
+
+| Lokasi Direktori           | Kategori Komponen            | Kriteria Penempatan                                                                                                                | Contoh Komponen                                                                  |
+| :------------------------- | :--------------------------- | :--------------------------------------------------------------------------------------------------------------------------------- | :------------------------------------------------------------------------------- |
+| **`components/ui/`**       | **Primitif UI (Atomic)**     | Komponen murni desain/primitif (shadcn UI). **Dilarang keras** memuat business logic, API call, atau domain spesifik Guardian Lab. | `button.tsx`, `dialog.tsx`, `input.tsx`, `skeleton.tsx`, `tabs.tsx`              |
+| **`components/shared/`**   | **Global Reusable**          | Komponen bisnis/antarmuka yang digunakan oleh **$\ge 2$ rute atau halaman berbeda**.                                               | `confirm-dialog.tsx`, `navbar.tsx`, `risk-badge.tsx`, `user-avatar.tsx`          |
+| **`app/.../_components/`** | **Lokal Fitur (Co-located)** | Komponen spesifik yang **HANYA digunakan oleh satu rute/halaman tersebut**.                                                        | `browser-frame.tsx` (hanya di Web Sandbox), `streak-card.tsx` (hanya di Academy) |
+
+> [!TIP]
+> **Aturan Promosi Komponen (_Component Promotion Rule_):**  
+> Selalu mulai dengan menempatkan komponen baru di direktori lokal fitur (`app/<rute>/_components/`). Begitu komponen tersebut dibutuhkan oleh rute lain di kemudian hari, **promosikan** file tersebut ke `components/shared/` dan perbarui path import-nya.
+
+### B. Mengapa Menggunakan Prefix Underscore (`_components`)?
+
+Dalam Next.js App Router, folder dengan awalan tanda garis bawah (seperti `_components/`, `_hooks/`, atau `_utils/`) secara otomatis diperlakukan sebagai **Private Folders**. Next.js menjamin bahwa berkas di dalam folder ini **tidak akan pernah dianggap sebagai rute URL publik**, sehingga aman untuk pengelompokan logic internal.
+
+### C. Gambaran Struktur Direktori Proyek
 
 ```text
-app/sandbox/web/
-├── page.tsx                     # Entry point rute
-├── loading.tsx                  # Skeleton loading state
-├── _components/
-│   ├── browser-frame.tsx        # Sub-komponen iframe/stream VNC
-│   ├── viewport-controls.tsx    # Tombol toggle Desktop/Mobile
-│   └── intercept-modal.tsx      # Modal notifikasi karantina APK
-├── _hooks/
-│   └── use-sandbox-session.ts   # Custom hook orkestrasi sesi container
-└── _utils/
-    └── url-defang.ts            # Helper sanitasi URL
+guardian-lab/
+├── app/                                 # Next.js App Router (Pages, Layouts, Route Handlers)
+│   ├── layout.tsx                       # Root layout (Toaster, Fonts, Global Providers)
+│   ├── page.tsx                         # Landing Dashboard (Modul 1)
+│   ├── _components/                     # Komponen spesifik landing page (Tab URL, QR, APK)
+│   ├── sandbox/
+│   │   └── web/
+│   │       ├── page.tsx                 # Rute Browser Sandbox (Modul 3)
+│   │       ├── loading.tsx              # Skeleton loading rute
+│   │       ├── _components/             # Komponen lokal: browser-frame.tsx, viewport-controls.tsx
+│   │       └── _hooks/                  # Custom hooks lokal: use-sandbox-session.ts
+│   ├── academy/
+│   │       ├── page.tsx                 # Rute Guardian Academy Gamifikasi (Modul 8)
+│   │       └── _components/             # Komponen lokal: quiz-card.tsx, exp-progress.tsx
+│   └── api/                             # Internal Route Handlers (analyze-url, analyze-apk, session)
+│
+├── components/                          # Komponen Global Lintas Rute
+│   ├── ui/                              # Primitif shadcn UI murni (button, dialog, tabs)
+│   └── shared/                          # Komponen global aplikasi (confirm-dialog, navbar, footer)
+│
+├── lib/                                 # Fondasi & Utilitas Bisnis Terpusat
+│   ├── routes.ts                        # Sentralisasi seluruh rute (Zero Hardcoded Routes)
+│   ├── utils.ts                         # Helper styling cn() dan formatting string
+│   └── validations/                     # Skema validasi Zod terpusat (url, apk, auth, quiz)
+│
+├── docker/                              # Infrastruktur Multi-Container Docker
+│   ├── app/Dockerfile                   # Fullstack Next.js production runner
+│   └── docker-compose.yml               # Orkestrasi container app & sandboxes
+│
+└── ai-agent-docs/                       # Dokumentasi resmi & panduan AI agent
 ```
 
 ---
